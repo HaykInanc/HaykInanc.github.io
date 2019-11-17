@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<canvas 
+	id="cvs" 
+	width="200" 
+	height="400" 
+	style="border: 1px solid black;" 
+	>
+	</canvas>
+	<script>
+		var canvas = document.getElementById('cvs')
+		var ctx = canvas.getContext('2d')
+		var playBlock
+        var area = []
+        var pause = false
+        var delay = 500
+        var sqSize = 20
+        var sqCountWidth = 10
+        var sqCountHeight = sqCountWidth*2
+        var canvasHeight = sqSize * sqCountHeight
+        var canvasWidth = sqSize * sqCountWidth
+
+        function newGame(){
+        	alert("А не начать бы нам новую игру?")
+			playBlock = new Block()
+            playBlock.draw()
+			area = []     
+			clearArea()   	
+        }
+        
+		function clearArea(){
+			var areaShift = 0
+			ctx.clearRect(0, 0, canvasWidth, canvasHeight)
+			for (var i = 0; i<sqCountHeight+1; i++){
+				area[i] = area[i] || []
+				for (var j = 0; j<sqCountWidth; j++){
+					if (area[i][j] != 3){
+                    	area[i][j] = 0  
+                    	ctx.strokeRect(j*sqSize, (i-1)*sqSize, sqSize, sqSize)
+                    }else {
+	                    ctx.strokeRect(j*sqSize, (i-1)*sqSize, sqSize, sqSize)
+	                    ctx.fillRect(j*sqSize+3, (i-1)*sqSize+3, sqSize-6, sqSize-6)
+                    }
+				}
+			}
+
+			for (var i = sqCountHeight; i>1; i--){
+				if(area[i].every(function(num){return num ==3})){
+					area[i].fill(0)
+					areaShift++
+				}
+                for (var j = 0; j<sqCountWidth; j++){
+                    area[i][j] = area[i-areaShift][j]
+                }
+			}
+
+            for (var i=0; i<playBlock.shape.length; i++){
+            	var x = playBlock.shape[i].x + playBlock.shape[i].xShift
+            	var y = playBlock.shape[i].y + playBlock.shape[i].yShift
+            	area[y][x] = 2
+            	if (y == sqCountHeight || area[y+1][x] == 3) {
+            		playBlock.fixed = true
+            	}
+            }
+
+			if (playBlock.fixed){
+	            for (var i=0; i<playBlock.shape.length; i++){
+	            	var x = playBlock.shape[i].x + playBlock.shape[i].xShift
+	            	var y = playBlock.shape[i].y + playBlock.shape[i].yShift
+            		area[y][x] = 3
+
+            		if (y == 1){
+          				newGame()
+          			}
+	            }				
+	            playBlock = new Block()
+			}
+
+		}
+
+		function Square(x, y){
+			this.x = x
+			this.y = y
+        	this.xShift = 0
+        	this.yShift = 0
+			this.width  = sqSize
+			this.height = sqSize
+
+			this.draw = function(){
+				ctx.strokeRect((this.xShift + this.x)*sqSize, 
+							   (this.yShift + this.y)*sqSize, 
+							   this.width, 
+							   this.height )
+	            ctx.fillRect((this.x+this.xShift)*sqSize+3, 
+	            			 (this.y+this.yShift)*sqSize+3, 
+	            			  this.width-6, 
+	            			  this.height-6)
+			}
+
+			this.drop = function(){
+				this.yShift +=1
+			}
+			this.goLeft = function(){
+				this.xShift -=1
+			}
+			this.goRight = function(){
+				this.xShift +=1
+			}
+
+		}
+
+		function Block(){
+			this.position = []
+			this.shape = []
+			this.rotate = 0
+
+			switch (Math.round(Math.random()*6)) {
+			  case 0:
+			    /* blockI */
+			    this.position = [
+			    	[[1,0], [1,1], [1,2], [1,3]],
+			    	[[0,1], [1,1], [2,1], [3,1]],
+			    	[[1,0], [1,1], [1,2], [1,3]],
+			    	[[0,1], [1,1], [2,1], [3,1]]
+			    ]
+			    break
+
+			  case 1:
+				/*blockJ*/
+
+			    this.position = [
+			    	[[1,0], [1,1], [1,2], [0,2]],
+			    	[[0,0], [0,1], [1,1], [2,1]],
+			    	[[0,0], [1,0], [0,1], [0,2]],
+			    	[[0,0], [1,0], [2,0], [2,1]]
+			    ]
+			    break
+
+			  case 2:
+				/*blockL*/
+				this.position = [
+			    	[[0,0], [0,1], [0,2], [1,2]],
+			    	[[0,0], [1,0], [2,0], [0,1]],
+			    	[[0,0], [1,0], [1,1], [1,2]],
+			    	[[2,0], [0,1], [1,1], [2,1]]
+			    ]
+			    break
+
+			  case 3:
+			    /*blockO*/
+			    this.position = [
+			    	[[0,0], [0,1], [1,0], [1,1]],
+			    	[[0,0], [0,1], [1,0], [1,1]],
+			    	[[0,0], [0,1], [1,0], [1,1]],
+			    	[[0,0], [0,1], [1,0], [1,1]]
+			    ]	
+			    break
+
+			  case 4:
+			    /*blockS*/
+			    this.position = [
+			    	[[0,1], [1,1], [1,0], [2,0]],
+			    	[[0,0], [0,1], [1,1], [1,2]],
+			    	[[0,1], [1,1], [1,0], [2,0]],
+			    	[[0,0], [0,1], [1,1], [1,2]],
+			    ]
+			    break
+
+			  case 5:
+			    /*blockT*/
+			    this.position = [
+			    	[[0,0], [0,1], [0,2], [1,1]],
+			    	[[0,0], [1,0], [2,0], [1,1]],
+			    	[[1,0], [0,1], [1,1], [1,2]],
+			    	[[1,0], [0,1], [1,1], [2,1]]
+			    ]
+			    break
+
+			  case 6:
+				/*blockZ*/
+				this.position = [
+			    	[[0,0], [0,1], [1,1], [1,2]],
+			    	[[1,0], [0,1], [1,1], [0,2]],
+			    	[[0,0], [0,1], [1,1], [1,2]],
+			    	[[1,0], [0,1], [1,1], [0,2]],
+			    ]	
+			    break
+			}
+
+			var defPos = this.position[this.rotate]
+			this.shape.push(new Square(defPos[0][0], defPos[0][1]))
+			this.shape.push(new Square(defPos[1][0], defPos[1][1]))
+			this.shape.push(new Square(defPos[2][0], defPos[2][1]))
+			this.shape.push(new Square(defPos[3][0], defPos[3][1]))
+
+			this.draw = function(){
+        		for (var i=0; i<this.shape.length; i++){
+        			this.shape[i].draw()
+        		}
+        	}
+
+        	this.drop = function(){
+			    for (var i=0; i<this.shape.length; i++){
+        			this.shape[i].drop()	
+        		}
+        	}
+        	
+        	this.goLeft= function(){
+        		var check = true
+
+				for (var i=0; i<this.shape.length; i++){
+	            	var x = playBlock.shape[i].x + playBlock.shape[i].xShift
+	            	var y = playBlock.shape[i].y + playBlock.shape[i].yShift
+        			if (x-1 < 0 || area[y][x-1] == 3){
+        				check = false
+        			}
+        		}
+
+				if (check){
+					for (var i=0; i<this.shape.length; i++){
+	        			this.shape[i].goLeft()
+	        		}
+        		}
+        		
+        	}
+
+        	this.goRight = function(){
+	        	for (var i=0; i<this.shape.length; i++){
+        			this.shape[i].goRight()	
+        		}
+        	}
+
+        	this.flip = function(){
+        		var newXPos = []
+        		var newYPos = []
+        		var toRotate = true
+
+    			if (this.rotate == 3){
+            		this.rotate = 0
+            	}else{
+            		this.rotate++
+            	}
+
+            	for (var i=0; i<this.shape.length; i++){
+            		newXPos.push(this.position[this.rotate][i][0])
+        			newYPos.push(this.position[this.rotate][i][1])
+            		if (this.position[this.rotate][i][0] + this.shape[i].xShift > sqCountWidth
+        				|| this.position[this.rotate][i][0] + this.shape[i].xShift < 0
+        				|| this.position[this.rotate][i][1] + this.shape[i].yShift > sqCountHeight
+        				|| this.position[this.rotate][i][1] + this.shape[i].yShift < 0 
+            			){
+            			toRotate = false
+            		}
+            	}
+
+            	if (toRotate){
+            	    for (var i=0; i<this.shape.length; i++){
+        				this.shape[i].x = newXPos[i]
+        				this.shape[i].y = newYPos[i]
+        			}	
+            	}else{
+            		this.rotate--
+            	}
+
+        	}
+
+        	this.motion = function(event){
+        		if (event.code == 'KeyA'){
+					this.goLeft()
+        		}else if (event.code == 'KeyD') {
+        			this.goRight()
+        		}else if (event.code == 'KeyW') {
+        			this.flip()
+        		}
+        	}
+
+		}
+
+		playBlock = new Block()
+
+		function step(){
+			clearArea()
+			playBlock.draw()
+		}
+
+		setInterval(function(){if (!pause){step()}  }, delay)
+		setInterval(function(){if (!pause){playBlock.drop()}  }, delay)
+
+		document.addEventListener('keypress', function(event){
+			if (!pause){
+				playBlock.motion(event)
+				step()
+			}
+
+    		if (event.code == 'KeyP'){
+				pause = !pause
+    		}
+
+		})
+
+	</script>
+</body>
+</html>
